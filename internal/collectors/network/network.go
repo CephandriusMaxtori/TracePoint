@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"sort"
+	"strconv"
 	"time"
 
 	probing "github.com/prometheus-community/pro-bing"
@@ -81,7 +82,7 @@ func PortScan(ctx context.Context, host string, start, end int) ([]PortResult, e
 			return out, ctx.Err()
 		default:
 		}
-		addr := fmt.Sprintf("%s:%d", host, p)
+		addr := net.JoinHostPort(host, strconv.Itoa(p))
 		conn, err := net.DialTimeout("tcp", addr, 700*time.Millisecond)
 		if err == nil {
 			conn.Close()

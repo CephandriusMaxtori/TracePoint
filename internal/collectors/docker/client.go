@@ -133,9 +133,9 @@ func (c *Client) StatsFor(ctx context.Context, id string, prev *statsSample) (St
 		return Stats{}, nil, fmt.Errorf("stats %s: HTTP %d", id, resp.StatusCode)
 	}
 	var st struct {
-		CPUStats  cpuStats `json:"cpu_stats"`
-		PreCPU    cpuStats `json:"precpu_stats"`
-		Memory    memStats `json:"memory_stats"`
+		CPUStats cpuStats `json:"cpu_stats"`
+		PreCPU   cpuStats `json:"precpu_stats"`
+		Memory   memStats `json:"memory_stats"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&st); err != nil {
 		return Stats{}, nil, err

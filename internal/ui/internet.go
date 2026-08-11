@@ -24,7 +24,7 @@ func (ui *UI) internetPage(gtx layout.Context) layout.Dimensions {
 	if ins.retestBtn.Clicked(gtx) {
 		ins.busy = true
 		ui.acts.Run("Internet connectivity check", func(ctx context.Context, log func(format string, args ...any)) {
-			ui.ic.Check(ctx)
+			ui.col.Internet.Check(ctx)
 			ins.busy = false
 			ui.win.Invalidate()
 		})
@@ -48,7 +48,7 @@ func (ui *UI) internetPage(gtx layout.Context) layout.Dimensions {
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									l := material.Label(ui.th.Theme, unit.Sp(20), "Internet " + overall.String())
+									l := material.Label(ui.th.Theme, unit.Sp(20), "Internet "+overall.String())
 									l.Font.Weight = 700
 									l.Color = overallColor
 									return l.Layout(gtx)

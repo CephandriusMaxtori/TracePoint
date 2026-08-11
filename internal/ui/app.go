@@ -77,8 +77,8 @@ type UI struct {
 	current Page
 	nav     []navItem
 
-	dialog  dialog
-	opsOpen bool
+	dialog    dialog
+	opsOpen   bool
 	opsToggle widget.Clickable
 
 	opHeader map[string]*widget.Clickable
@@ -228,7 +228,7 @@ func (ui *UI) navRow(gtx layout.Context, item *navItem) layout.Dimensions {
 		fg = ui.th.Pal.TextOnAccent
 	}
 	return layout.Inset{Top: 2, Bottom: 2}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return material.Clickable(ui.th.Theme, &item.click, func(gtx layout.Context) layout.Dimensions {
+		return material.Clickable(gtx, &item.click, func(gtx layout.Context) layout.Dimensions {
 			if selected {
 				rr := clip.UniformRRect(image.Rect(0, 0, gtx.Constraints.Max.X, gtx.Constraints.Max.Y), gtx.Dp(radiusControl))
 				paint.FillShape(gtx.Ops, ui.th.Pal.Accent, rr.Op(gtx.Ops))
@@ -250,7 +250,7 @@ func (ui *UI) navRow(gtx layout.Context, item *navItem) layout.Dimensions {
 					}),
 				)
 			})
-		}).Layout(gtx)
+		})
 	})
 }
 
@@ -428,7 +428,7 @@ func (ui *UI) opRow(gtx layout.Context, op *actions.Op) layout.Dimensions {
 	var statusText string
 	switch op.Status {
 	case actions.StatusRunning:
-		statusIcon = icons.AvLoop
+		statusIcon = icons.AVLoop
 		statusColor = ui.th.Pal.Accent
 		statusText = fmt.Sprintf("%.0fs", time.Since(op.Started).Seconds())
 	case actions.StatusError:

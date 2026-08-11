@@ -80,10 +80,10 @@ func PortScanConcurrent(ctx context.Context, host string, ports []int, log func(
 	}
 	jobs := make(chan int)
 	var (
-		mu    sync.Mutex
-		seen  int
-		left  = len(ports)
-		wg    sync.WaitGroup
+		mu      sync.Mutex
+		seen    int
+		left    = len(ports)
+		wg      sync.WaitGroup
 		results []PortResult
 	)
 

@@ -265,57 +265,61 @@ func (ui *UI) sparkCard2(gtx layout.Context, title string, in, out []float64) la
 }
 
 func (ui *UI) infoRow(gtx layout.Context, sys state.System, pk state.Packages, uptime uint64) layout.Dimensions {
-	host := ui.card(gtx, ui.th.Pal.Card, radiusCard, 16, func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.sectionTitle(gtx, "System")
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Hostname", sys.Hostname)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "OS", fmt.Sprintf("%s %s (%s)", sys.OS, sys.Platform, sys.Arch))
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Kernel", sys.Kernel)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "CPU Cores", fmt.Sprintf("%d", sys.CPUCount))
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Memory", fmt.Sprintf("%s / %s", fmtBytes(sys.MemUsed), fmtBytes(sys.MemTotal)))
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Boot Time", time.Unix(int64(sys.BootTimeSec), 0).Format("2006-01-02 15:04"))
-			}),
-		)
-	})
-	pkCard := ui.card(gtx, ui.th.Pal.Card, radiusCard, 16, func(gtx layout.Context) layout.Dimensions {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.sectionTitle(gtx, "Package Manager")
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Backend", pk.Backend)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Version", pk.Version)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Installed", fmt.Sprintf("%d", pk.Installed))
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return ui.kv(gtx, "Outdated", fmt.Sprintf("%d", pk.Outdated))
-			}),
-			layout.Rigid(layout.Spacer{Height: 12}.Layout),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				if !pk.Available {
-					return ui.muted(gtx, "No package manager detected. Chocolatey is recommended on Windows.")
-				}
-				return layout.Dimensions{}
-			}),
-		)
-	})
+	host := func(gtx layout.Context) layout.Dimensions {
+		return ui.card(gtx, ui.th.Pal.Card, radiusCard, 16, func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.sectionTitle(gtx, "System")
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Hostname", sys.Hostname)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "OS", fmt.Sprintf("%s %s (%s)", sys.OS, sys.Platform, sys.Arch))
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Kernel", sys.Kernel)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "CPU Cores", fmt.Sprintf("%d", sys.CPUCount))
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Memory", fmt.Sprintf("%s / %s", fmtBytes(sys.MemUsed), fmtBytes(sys.MemTotal)))
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Boot Time", time.Unix(int64(sys.BootTimeSec), 0).Format("2006-01-02 15:04"))
+				}),
+			)
+		})
+	}
+	pkCard := func(gtx layout.Context) layout.Dimensions {
+		return ui.card(gtx, ui.th.Pal.Card, radiusCard, 16, func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.sectionTitle(gtx, "Package Manager")
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Backend", pk.Backend)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Version", pk.Version)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Installed", fmt.Sprintf("%d", pk.Installed))
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return ui.kv(gtx, "Outdated", fmt.Sprintf("%d", pk.Outdated))
+				}),
+				layout.Rigid(layout.Spacer{Height: 12}.Layout),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if !pk.Available {
+						return ui.muted(gtx, "No package manager detected. Chocolatey is recommended on Windows.")
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		})
+	}
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Right: 14}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {

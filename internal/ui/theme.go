@@ -52,10 +52,10 @@ type Theme struct {
 func NewTheme() *Theme {
 	mt := material.NewTheme()
 	mt.Palette = material.Palette{
-		Bg:          nrgb(0x0e, 0x11, 0x16),
-		Fg:          nrgb(0xe8, 0xec, 0xf4),
-		ContrastBg:  nrgb(0x4f, 0x8c, 0xff),
-		ContrastFg:  nrgb(0xf5, 0xf8, 0xff),
+		Bg:         nrgb(0x0e, 0x11, 0x16),
+		Fg:         nrgb(0xe8, 0xec, 0xf4),
+		ContrastBg: nrgb(0x4f, 0x8c, 0xff),
+		ContrastFg: nrgb(0xf5, 0xf8, 0xff),
 	}
 	mt.TextSize = 14
 	return &Theme{Theme: mt, Pal: NewPalette()}

@@ -14,11 +14,12 @@ import (
 )
 
 type appsState struct {
-	searchEditor widget.Editor
-	searchBtn    widget.Clickable
-	searchBusy   bool
-	searchErr    string
-	searchList   widget.List
+	searchEditor  widget.Editor
+	searchBtn     widget.Clickable
+	searchBusy    bool
+	searchErr     string
+	searchList    widget.List
+	searchResults []state.App
 
 	installedList widget.List
 	installBtn    map[string]*widget.Clickable
@@ -77,16 +78,18 @@ func (ui *UI) appsPage(gtx layout.Context) layout.Dimensions {
 
 func (ui *UI) appsHeader(gtx layout.Context, pk state.Packages) layout.Dimensions {
 	as := &ui.apps
+	pmName := "none"
+	if pk.Available {
+		pmName = pk.Backend
+	}
 	return ui.card(gtx, ui.th.Pal.Card, radiusCard, 16, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						c := ui.th.Pal.Danger
-						name := "none"
 						if pk.Available {
 							c = ui.th.Pal.Success
-							name = pk.Backend
 						}
 						return ui.statusDot(gtx, c, 12)
 					}),
@@ -94,7 +97,7 @@ func (ui *UI) appsHeader(gtx layout.Context, pk state.Packages) layout.Dimension
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								l := material.Label(ui.th.Theme, unit.Sp(17), "Package Manager: "+name)
+								l := material.Label(ui.th.Theme, unit.Sp(17), "Package Manager: "+pmName)
 								l.Font.Weight = 700
 								return l.Layout(gtx)
 							}),
@@ -187,7 +190,7 @@ func (ui *UI) handleAppsActions(gtx layout.Context) {
 		ui.st.Read(func(s *state.Store) { backend = s.Packages.Backend })
 		as.searchBusy = true
 		ui.acts.RunErr("Search packages for "+query, func(ctx context.Context, log func(format string, args ...any)) error {
-			res, err := apps.Search(ctx, backend, query, log)
+			res, err := apps.Search(ctx, backend, query, lineLog(log))
 			as.searchBusy = false
 			as.searchErr = ""
 			ui.win.Invalidate()
@@ -234,10 +237,16 @@ func (ui *UI) backend() string {
 	return b
 }
 
+// lineLog adapts the action manager's printf-style logger to the plain-string
+// logger used by the package backends.
+func lineLog(log func(format string, args ...any)) func(string) {
+	return func(line string) { log("%s", line) }
+}
+
 func (ui *UI) installPkg(gtx layout.Context, pkg string) {
 	backend := ui.backend()
 	ui.acts.RunErr("Install "+pkg, func(ctx context.Context, log func(format string, args ...any)) error {
-		err := apps.Install(ctx, backend, pkg, log)
+		err := apps.Install(ctx, backend, pkg, lineLog(log))
 		if err == nil && ui.col.Apps != nil {
 			ui.col.Apps.Refresh(ctx)
 		}
@@ -248,7 +257,7 @@ func (ui *UI) installPkg(gtx layout.Context, pkg string) {
 func (ui *UI) upgradePkg(gtx layout.Context, pkg string) {
 	backend := ui.backend()
 	ui.acts.RunErr("Upgrade "+pkg, func(ctx context.Context, log func(format string, args ...any)) error {
-		err := apps.Upgrade(ctx, backend, pkg, log)
+		err := apps.Upgrade(ctx, backend, pkg, lineLog(log))
 		if err == nil && ui.col.Apps != nil {
 			ui.col.Apps.Refresh(ctx)
 		}
@@ -259,7 +268,7 @@ func (ui *UI) upgradePkg(gtx layout.Context, pkg string) {
 func (ui *UI) uninstallPkg(gtx layout.Context, pkg string) {
 	backend := ui.backend()
 	ui.acts.RunErr("Uninstall "+pkg, func(ctx context.Context, log func(format string, args ...any)) error {
-		err := apps.Uninstall(ctx, backend, pkg, log)
+		err := apps.Uninstall(ctx, backend, pkg, lineLog(log))
 		if err == nil && ui.col.Apps != nil {
 			ui.col.Apps.Refresh(ctx)
 		}
@@ -270,7 +279,7 @@ func (ui *UI) uninstallPkg(gtx layout.Context, pkg string) {
 func (ui *UI) upgradeAll(gtx layout.Context) {
 	backend := ui.backend()
 	ui.acts.RunErr("Upgrade all packages", func(ctx context.Context, log func(format string, args ...any)) error {
-		err := apps.UpgradeAll(ctx, backend, log)
+		err := apps.UpgradeAll(ctx, backend, lineLog(log))
 		if err == nil && ui.col.Apps != nil {
 			ui.col.Apps.Refresh(ctx)
 		}

@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"image/color"
 
 	"gioui.org/layout"
 	"gioui.org/unit"

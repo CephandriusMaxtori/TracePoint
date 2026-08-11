@@ -56,7 +56,7 @@ func (ui *UI) caption(gtx layout.Context, text string) layout.Dimensions {
 }
 
 func (ui *UI) statusDot(gtx layout.Context, c color.NRGBA, size int) layout.Dimensions {
-	circle := clip.Circle{Center: f32.Pt(float32(size)/2, float32(size)/2), Radius: float32(size) / 2}
+	circle := clip.Ellipse(image.Rect(0, 0, size, size))
 	paint.FillShape(gtx.Ops, c, circle.Op(gtx.Ops))
 	return layout.Dimensions{Size: image.Pt(size, size)}
 }

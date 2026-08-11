@@ -10,7 +10,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"tracepoint/internal/collectors/docker"
 	"tracepoint/internal/state"
 )
 
@@ -127,10 +126,8 @@ func (ui *UI) dockerHeader(gtx layout.Context, dock state.Docker) layout.Dimensi
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				c := ui.th.Pal.Danger
-				label := "not connected"
 				if dock.Connected {
 					c = ui.th.Pal.Success
-					label = "connected"
 				}
 				return ui.statusDot(gtx, c, 14)
 			}),

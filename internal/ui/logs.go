@@ -49,9 +49,7 @@ func (ui *UI) logsPage(gtx layout.Context) layout.Dimensions {
 		following = ls.tailer.Active()
 	}
 
-	if following {
-		ls.list.ScrollToEnd()
-	}
+	ls.list.ScrollToEnd = following
 
 	return ui.pageInset(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -68,16 +66,18 @@ func (ui *UI) logsPage(gtx layout.Context) layout.Dimensions {
 								layout.Rigid(layout.Spacer{Width: 12}.Layout),
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 									c := ui.th.Pal.Muted
-									label := "stopped"
 									if following {
 										c = ui.th.Pal.Success
-										label = "following"
 									}
 									return ui.statusDot(gtx, c, 8)
 								}),
 								layout.Rigid(layout.Spacer{Width: 6}.Layout),
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-									return ui.caption(gtx, label)
+									text := "stopped"
+									if following {
+										text = "following"
+									}
+									return ui.caption(gtx, text)
 								}),
 							)
 						}),

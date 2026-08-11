@@ -56,9 +56,9 @@ func indexByte(b []byte, c byte) int {
 	return -1
 }
 
-func IsWindows() bool  { return runtime.GOOS == "windows" }
-func IsLinux() bool    { return runtime.GOOS == "linux" }
-func IsDarwin() bool   { return runtime.GOOS == "darwin" }
+func IsWindows() bool { return runtime.GOOS == "windows" }
+func IsLinux() bool   { return runtime.GOOS == "linux" }
+func IsDarwin() bool  { return runtime.GOOS == "darwin" }
 
 func LookPath(name string) string {
 	p, err := exec.LookPath(name)

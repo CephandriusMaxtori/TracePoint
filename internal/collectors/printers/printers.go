@@ -62,10 +62,10 @@ func (c *Collector) refresh(ctx context.Context) {
 }
 
 type winPrinter struct {
-	Name         string `json:"Name"`
-	DriverName   string `json:"DriverName"`
+	Name          string `json:"Name"`
+	DriverName    string `json:"DriverName"`
 	PrinterStatus uint32 `json:"PrinterStatus"`
-	Default      bool   `json:"Default"`
+	Default       bool   `json:"Default"`
 }
 
 func List(ctx context.Context) ([]state.Printer, error) {
