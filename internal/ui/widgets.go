@@ -39,18 +39,18 @@ func (ui *UI) card(gtx layout.Context, bg color.NRGBA, radius int, pad unit.Dp, 
 
 func (ui *UI) sectionTitle(gtx layout.Context, title string) layout.Dimensions {
 	return layout.Inset{Top: 6, Bottom: 10}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return material.Label(ui.th, unit.Sp(15), title).Layout(gtx)
+		return material.Label(ui.th.Theme, unit.Sp(15), title).Layout(gtx)
 	})
 }
 
 func (ui *UI) muted(gtx layout.Context, text string) layout.Dimensions {
-	l := material.Label(ui.th, unit.Sp(12), text)
+	l := material.Label(ui.th.Theme, unit.Sp(12), text)
 	l.Color = ui.th.Pal.Muted
 	return l.Layout(gtx)
 }
 
 func (ui *UI) caption(gtx layout.Context, text string) layout.Dimensions {
-	l := material.Label(ui.th, unit.Sp(11), text)
+	l := material.Label(ui.th.Theme, unit.Sp(11), text)
 	l.Color = ui.th.Pal.Muted
 	return l.Layout(gtx)
 }
@@ -130,7 +130,7 @@ func hbar(gtx layout.Context, frac float32, fill, track color.NRGBA, width, heig
 }
 
 func (ui *UI) button(gtx layout.Context, clickable *widget.Clickable, label string, bg color.NRGBA, fg color.NRGBA) layout.Dimensions {
-	btn := material.Button(ui.th, clickable, label)
+	btn := material.Button(ui.th.Theme, clickable, label)
 	btn.Background = bg
 	btn.Color = fg
 	btn.CornerRadius = unit.Dp(radiusControl)
@@ -155,7 +155,7 @@ func (ui *UI) successButton(gtx layout.Context, clickable *widget.Clickable, lab
 }
 
 func (ui *UI) iconButton(gtx layout.Context, clickable *widget.Clickable, icon *widget.Icon, tooltip string) layout.Dimensions {
-	ib := material.IconButton(ui.th, clickable, icon, tooltip)
+	ib := material.IconButton(ui.th.Theme, clickable, icon, tooltip)
 	ib.Background = ui.th.Pal.CardAlt
 	ib.Color = ui.th.Pal.Fg
 	ib.Size = unit.Dp(18)
@@ -163,7 +163,7 @@ func (ui *UI) iconButton(gtx layout.Context, clickable *widget.Clickable, icon *
 }
 
 func (ui *UI) pill(gtx layout.Context, clickable *widget.Clickable, label string, bg color.NRGBA, fg color.NRGBA, weight float32) layout.Dimensions {
-	btn := material.Button(ui.th, clickable, label)
+	btn := material.Button(ui.th.Theme, clickable, label)
 	btn.Background = bg
 	btn.Color = fg
 	btn.CornerRadius = unit.Dp(radiusPill)

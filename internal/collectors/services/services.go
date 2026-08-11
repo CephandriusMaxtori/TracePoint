@@ -2,10 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"tracepoint/internal/state"
 )
+
+var errNoBackend = errors.New("no service backend available on this platform")
 
 type Backend interface {
 	List(ctx context.Context) ([]state.Service, error)
@@ -15,6 +18,10 @@ type Backend interface {
 }
 
 var backend Backend
+
+func init() {
+	backend = platformBackend()
+}
 
 func SetBackend(b Backend) { backend = b }
 
@@ -39,6 +46,9 @@ func (c *Collector) Run(ctx context.Context) {
 		}
 	}
 }
+
+// Refresh triggers an immediate service list refresh.
+func (c *Collector) Refresh(ctx context.Context) { c.refresh(ctx) }
 
 func (c *Collector) refresh(ctx context.Context) {
 	list, err := List(ctx)

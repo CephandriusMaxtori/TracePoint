@@ -60,7 +60,7 @@ func (c *Collector) refresh(ctx context.Context, full bool) {
 		sys.Load1, sys.Load5, sys.Load15 = la.Load1, la.Load5, la.Load15
 	}
 
-	if percents, err := cpu.PercentWithContext(ctx, 0); err == nil && len(percents) > 0 {
+	if percents, err := cpu.PercentWithContext(ctx, 0, false); err == nil && len(percents) > 0 {
 		var total float64
 		for _, p := range percents {
 			total += p
@@ -138,7 +138,7 @@ func topProcesses(ctx context.Context) []state.Proc {
 			name = "?"
 		}
 		scores = append(scores, scored{
-			p: state.Proc{PID: p.Pid, Name: name, CPUPercent: pp, MemPercent: mp},
+			p:   state.Proc{PID: p.Pid, Name: name, CPUPercent: pp, MemPercent: float64(mp)},
 			cpu: pp,
 		})
 	}

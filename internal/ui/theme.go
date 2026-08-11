@@ -7,17 +7,19 @@ import (
 )
 
 type Palette struct {
-	Sidebar color.NRGBA
-	Card    color.NRGBA
-	CardAlt color.NRGBA
-	Border  color.NRGBA
-	Muted   color.NRGBA
-	Success color.NRGBA
-	Warn    color.NRGBA
-	Danger  color.NRGBA
-	Accent  color.NRGBA
-	AccentDark color.NRGBA
+	Sidebar      color.NRGBA
+	Card         color.NRGBA
+	CardAlt      color.NRGBA
+	Border       color.NRGBA
+	Muted        color.NRGBA
+	Success      color.NRGBA
+	Warn         color.NRGBA
+	Danger       color.NRGBA
+	Accent       color.NRGBA
+	AccentDark   color.NRGBA
 	TextOnAccent color.NRGBA
+	Fg           color.NRGBA
+	Bg           color.NRGBA
 }
 
 func nrgb(r, g, b uint8) color.NRGBA {
@@ -37,6 +39,8 @@ func NewPalette() Palette {
 		Accent:       nrgb(0x4f, 0x8c, 0xff),
 		AccentDark:   nrgb(0x2f, 0x6b, 0xd0),
 		TextOnAccent: nrgb(0xf5, 0xf8, 0xff),
+		Fg:           nrgb(0xe8, 0xec, 0xf4),
+		Bg:           nrgb(0x0e, 0x11, 0x16),
 	}
 }
 

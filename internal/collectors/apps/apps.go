@@ -33,6 +33,9 @@ func (c *Collector) Run(ctx context.Context) {
 	}
 }
 
+// Refresh triggers an immediate package refresh.
+func (c *Collector) Refresh(ctx context.Context) { c.refresh(ctx) }
+
 func (c *Collector) refresh(ctx context.Context) {
 	name, ver, ok := Detect(ctx)
 	pk := state.Packages{

@@ -4,13 +4,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math"
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/op"
-	"gioui.org/op/clip"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -80,19 +76,19 @@ func (ui *UI) overviewPage(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.gaugeRow(gtx, sys)
 			}),
-			layout.Rigid(layout.Spacer{Height: pad}),
+			layout.Rigid(layout.Spacer{Height: pad}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.sparkRow(gtx, cpuHist, memHist, inHist, outHist)
 			}),
-			layout.Rigid(layout.Spacer{Height: pad}),
+			layout.Rigid(layout.Spacer{Height: pad}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.infoRow(gtx, sys, pk, uptime)
 			}),
-			layout.Rigid(layout.Spacer{Height: pad}),
+			layout.Rigid(layout.Spacer{Height: pad}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.procsCard(gtx, procs)
 			}),
-			layout.Rigid(layout.Spacer{Height: pad}),
+			layout.Rigid(layout.Spacer{Height: pad}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.disksCard(gtx, disks)
 			}),
@@ -151,15 +147,15 @@ func (ui *UI) gaugeCard(gtx layout.Context, title, value string, frac float32, c
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.caption(gtx, title)
 			}),
-			layout.Rigid(layout.Spacer{Height: 10}),
+			layout.Rigid(layout.Spacer{Height: 10}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.ring(gtx, frac, c, 74)
 					}),
-					layout.Rigid(layout.Spacer{Width: 14}),
+					layout.Rigid(layout.Spacer{Width: 14}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						l := material.Label(ui.th, unit.Sp(22), value)
+						l := material.Label(ui.th.Theme, unit.Sp(22), value)
 						l.Font.Weight = 700
 						l.Color = c
 						return l.Layout(gtx)
@@ -176,13 +172,13 @@ func (ui *UI) statCard(gtx layout.Context, title, value, sub string) layout.Dime
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.caption(gtx, title)
 			}),
-			layout.Rigid(layout.Spacer{Height: 12}),
+			layout.Rigid(layout.Spacer{Height: 12}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				l := material.Label(ui.th, unit.Sp(22), value)
+				l := material.Label(ui.th.Theme, unit.Sp(22), value)
 				l.Font.Weight = 700
 				return l.Layout(gtx)
 			}),
-			layout.Rigid(layout.Spacer{Height: 6}),
+			layout.Rigid(layout.Spacer{Height: 6}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.muted(gtx, sub)
 			}),
@@ -219,7 +215,7 @@ func (ui *UI) sparkCard(gtx layout.Context, title string, data []float64, c colo
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.caption(gtx, title)
 			}),
-			layout.Rigid(layout.Spacer{Height: 10}),
+			layout.Rigid(layout.Spacer{Height: 10}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				w := gtx.Constraints.Max.X
 				h := gtx.Dp(unit.Dp(56))
@@ -236,7 +232,7 @@ func (ui *UI) sparkCard2(gtx layout.Context, title string, in, out []float64) la
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.caption(gtx, title)
 			}),
-			layout.Rigid(layout.Spacer{Height: 10}),
+			layout.Rigid(layout.Spacer{Height: 10}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				w := gtx.Constraints.Max.X
 				h := gtx.Dp(unit.Dp(56))
@@ -244,21 +240,21 @@ func (ui *UI) sparkCard2(gtx layout.Context, title string, in, out []float64) la
 				sparkline(gtx.Ops, out, ui.th.Pal.Accent, w, h)
 				return layout.Dimensions{Size: image.Pt(w, h)}
 			}),
-			layout.Rigid(layout.Spacer{Height: 6}),
+			layout.Rigid(layout.Spacer{Height: 6}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.statusDot(gtx, ui.th.Pal.Success, 7)
 					}),
-					layout.Rigid(layout.Spacer{Width: 6}),
+					layout.Rigid(layout.Spacer{Width: 6}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.caption(gtx, "in")
 					}),
-					layout.Rigid(layout.Spacer{Width: 12}),
+					layout.Rigid(layout.Spacer{Width: 12}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.statusDot(gtx, ui.th.Pal.Accent, 7)
 					}),
-					layout.Rigid(layout.Spacer{Width: 6}),
+					layout.Rigid(layout.Spacer{Width: 6}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.caption(gtx, "out")
 					}),
@@ -311,7 +307,7 @@ func (ui *UI) infoRow(gtx layout.Context, sys state.System, pk state.Packages, u
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return ui.kv(gtx, "Outdated", fmt.Sprintf("%d", pk.Outdated))
 			}),
-			layout.Rigid(layout.Spacer{Height: 12}),
+			layout.Rigid(layout.Spacer{Height: 12}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				if !pk.Available {
 					return ui.muted(gtx, "No package manager detected. Chocolatey is recommended on Windows.")
@@ -340,7 +336,7 @@ func (ui *UI) kv(gtx layout.Context, k, v string) layout.Dimensions {
 				return ui.muted(gtx, k)
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				l := material.Label(ui.th, unit.Sp(13), v)
+				l := material.Label(ui.th.Theme, unit.Sp(13), v)
 				l.Color = ui.th.Pal.Fg
 				return l.Layout(gtx)
 			}),
@@ -361,7 +357,7 @@ func (ui *UI) procsCard(gtx layout.Context, procs []state.Proc) layout.Dimension
 						return ui.muted(gtx, "No process data")
 					})
 				}
-				return material.List(ui.th, &ui.overview.procsList).Layout(gtx, len(procs), func(gtx layout.Context, i int) layout.Dimensions {
+				return material.List(ui.th.Theme, &ui.overview.procsList).Layout(gtx, len(procs), func(gtx layout.Context, i int) layout.Dimensions {
 					return ui.procRow(gtx, procs[i])
 				})
 			}),
@@ -373,13 +369,13 @@ func (ui *UI) procRow(gtx layout.Context, p state.Proc) layout.Dimensions {
 	return layout.Inset{Top: 5, Bottom: 5}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				l := material.Label(ui.th, unit.Sp(12), fmt.Sprintf("%d", p.PID))
+				l := material.Label(ui.th.Theme, unit.Sp(12), fmt.Sprintf("%d", p.PID))
 				l.Color = ui.th.Pal.Muted
 				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(60))
 				return l.Layout(gtx)
 			}),
 			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				l := material.Label(ui.th, unit.Sp(13), p.Name)
+				l := material.Label(ui.th.Theme, unit.Sp(13), p.Name)
 				l.Color = ui.th.Pal.Fg
 				return l.Layout(gtx)
 			}),
@@ -387,17 +383,17 @@ func (ui *UI) procRow(gtx layout.Context, p state.Proc) layout.Dimensions {
 				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(70))
 				return hbar(gtx, float32(p.CPUPercent/100), ui.th.Pal.Accent, ui.th.Pal.CardAlt, 70, 6)
 			}),
-			layout.Rigid(layout.Spacer{Width: 10}),
+			layout.Rigid(layout.Spacer{Width: 10}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(56))
-				l := material.Label(ui.th, unit.Sp(12), fmt.Sprintf("%.1f%%", p.CPUPercent))
+				l := material.Label(ui.th.Theme, unit.Sp(12), fmt.Sprintf("%.1f%%", p.CPUPercent))
 				l.Color = ui.th.Pal.Fg
 				return l.Layout(gtx)
 			}),
-			layout.Rigid(layout.Spacer{Width: 10}),
+			layout.Rigid(layout.Spacer{Width: 10}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Max.X = gtx.Dp(unit.Dp(56))
-				l := material.Label(ui.th, unit.Sp(12), fmt.Sprintf("%.1f%%", p.MemPercent))
+				l := material.Label(ui.th.Theme, unit.Sp(12), fmt.Sprintf("%.1f%%", p.MemPercent))
 				l.Color = ui.th.Pal.Muted
 				return l.Layout(gtx)
 			}),
@@ -416,7 +412,7 @@ func (ui *UI) disksCard(gtx layout.Context, disks []state.Disk) layout.Dimension
 					return layout.Dimensions{}
 				}
 				gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(220))
-				return material.List(ui.th, &ui.overview.disksList).Layout(gtx, len(disks), func(gtx layout.Context, i int) layout.Dimensions {
+				return material.List(ui.th.Theme, &ui.overview.disksList).Layout(gtx, len(disks), func(gtx layout.Context, i int) layout.Dimensions {
 					return ui.diskRow(gtx, disks[i])
 				})
 			}),
@@ -430,22 +426,22 @@ func (ui *UI) diskRow(gtx layout.Context, d state.Disk) layout.Dimensions {
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						l := material.Label(ui.th, unit.Sp(13), d.Mount)
+						l := material.Label(ui.th.Theme, unit.Sp(13), d.Mount)
 						l.Font.Weight = 600
 						l.Color = ui.th.Pal.Fg
 						return l.Layout(gtx)
 					}),
-					layout.Rigid(layout.Spacer{Width: 10}),
+					layout.Rigid(layout.Spacer{Width: 10}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.caption(gtx, d.FSType)
 					}),
-					layout.Flexed(1, layout.Spacer{Width: 0}),
+					layout.Flexed(1, layout.Spacer{Width: 0}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.caption(gtx, fmt.Sprintf("%s used of %s", fmtBytes(d.Used), fmtBytes(d.Total)))
 					}),
 				)
 			}),
-			layout.Rigid(layout.Spacer{Height: 6}),
+			layout.Rigid(layout.Spacer{Height: 6}.Layout),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				w := gtx.Constraints.Max.X
 				return hbar(gtx, float32(d.Percent/100), ui.th.valueColor(d.Percent), ui.th.Pal.CardAlt, w, 8)
@@ -453,9 +449,3 @@ func (ui *UI) diskRow(gtx layout.Context, d state.Disk) layout.Dimensions {
 		)
 	})
 }
-
-var _ = color.NRGBA{}
-var _ = math.Max
-var _ = op.Ops{}
-var _ = clip.Op{}
-var _ = paint.ColorOp{}

@@ -3,6 +3,7 @@ package printers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"runtime"
 	"strings"
 	"time"
@@ -30,6 +31,23 @@ func (c *Collector) Run(ctx context.Context) {
 		case <-t.C:
 			c.refresh(ctx)
 		}
+	}
+}
+
+// Refresh triggers an immediate printer list refresh.
+func (c *Collector) Refresh(ctx context.Context) { c.refresh(ctx) }
+
+// TestPage prints a one-line test page on the named printer.
+func TestPage(ctx context.Context, name string) error {
+	switch runtime.GOOS {
+	case "windows":
+		script := fmt.Sprintf("'TracePoint test page %s' | Out-Printer -Name '%s'",
+			time.Now().Format("15:04:05"), strings.ReplaceAll(name, "'", "''"))
+		_, err := osutil.RunCaptureStd(ctx, "powershell",
+			[]string{"-NoProfile", "-NonInteractive", "-Command", script})
+		return err
+	default:
+		return osutil.RunStream(ctx, "lp", []string{"-d", name}, func(string) {})
 	}
 }
 

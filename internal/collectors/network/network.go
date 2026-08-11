@@ -8,8 +8,6 @@ import (
 	"time"
 
 	probing "github.com/prometheus-community/pro-bing"
-
-	"tracepoint/internal/state"
 )
 
 // PingResult is the outcome of an ICMP ping.

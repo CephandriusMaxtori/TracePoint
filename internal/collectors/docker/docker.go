@@ -17,7 +17,7 @@ type Collector struct {
 func New(st *state.Store) *Collector {
 	return &Collector{
 		st:     st,
-		client: New(),
+		client: NewClient(),
 		prev:   map[string]*statsSample{},
 	}
 }
@@ -35,6 +35,9 @@ func (c *Collector) Run(ctx context.Context) {
 		}
 	}
 }
+
+// Refresh triggers an immediate container refresh.
+func (c *Collector) Refresh(ctx context.Context) { c.refresh(ctx) }
 
 func (c *Collector) refresh(ctx context.Context) {
 	res := state.Docker{UpdatedAt: time.Now()}

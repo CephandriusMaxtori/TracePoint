@@ -17,8 +17,22 @@ import (
 	"gioui.org/widget/material"
 
 	"tracepoint/internal/actions"
+	"tracepoint/internal/collectors/apps"
+	"tracepoint/internal/collectors/docker"
+	"tracepoint/internal/collectors/internet"
+	"tracepoint/internal/collectors/printers"
+	"tracepoint/internal/collectors/services"
 	"tracepoint/internal/state"
 )
+
+// Collectors holds the stateful collectors whose actions the UI triggers.
+type Collectors struct {
+	Internet *internet.Collector
+	Docker   *docker.Collector
+	Services *services.Collector
+	Apps     *apps.Collector
+	Printers *printers.Collector
+}
 
 type Page int
 
@@ -56,6 +70,7 @@ type UI struct {
 	th   *Theme
 	st   *state.Store
 	acts *actions.Manager
+	col  Collectors
 	ctx  context.Context
 	win  *app.Window
 
@@ -64,6 +79,7 @@ type UI struct {
 
 	dialog  dialog
 	opsOpen bool
+	opsToggle widget.Clickable
 
 	opHeader map[string]*widget.Clickable
 	opLogs   map[string]*widget.List
@@ -82,7 +98,7 @@ type UI struct {
 	apps     appsState
 }
 
-func New(th *Theme, st *state.Store, acts *actions.Manager, ctx context.Context) *UI {
+func New(th *Theme, st *state.Store, acts *actions.Manager, col Collectors, ctx context.Context) *UI {
 	ui := &UI{
 		th:       th,
 		st:       st,
@@ -94,7 +110,7 @@ func New(th *Theme, st *state.Store, acts *actions.Manager, ctx context.Context)
 	}
 	ui.nav = []navItem{
 		{icon: icons.ActionDashboard, label: "Overview", page: PageOverview},
-		{icon: icons.DeviceNetworkWifi, label: "Network", page: PageNetwork},
+		{icon: icons.DeviceNetworkWiFi, label: "Network", page: PageNetwork},
 		{icon: icons.AVWeb, label: "Internet", page: PageInternet},
 		{icon: icons.ActionSettings, label: "Services", page: PageServices},
 		{icon: icons.ActionList, label: "Logs", page: PageLogs},
@@ -149,7 +165,7 @@ func (ui *UI) sidebar(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Top: 22, Bottom: 16, Left: 16, Right: 16}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(ui.sidebarHeader),
-					layout.Rigid(layout.Spacer{Height: 26}),
+					layout.Rigid(layout.Spacer{Height: 26}.Layout),
 					layout.Rigid(ui.sidebarNav),
 					layout.Flexed(1, layout.Spacer{Height: 0}.Layout),
 					layout.Rigid(ui.sidebarFooter),
@@ -175,17 +191,17 @@ func (ui *UI) sidebarHeader(gtx layout.Context) layout.Dimensions {
 				},
 			)
 		}),
-		layout.Rigid(layout.Spacer{Width: 12}),
+		layout.Rigid(layout.Spacer{Width: 12}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					l := material.Label(ui.th, unit.Sp(17), "TracePoint")
+					l := material.Label(ui.th.Theme, unit.Sp(17), "TracePoint")
 					l.Font.Weight = 700
 					l.Color = ui.th.Pal.Fg
 					return l.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					l := material.Label(ui.th, unit.Sp(11), "Sysadmin Dashboard")
+					l := material.Label(ui.th.Theme, unit.Sp(11), "Sysadmin Dashboard")
 					l.Color = ui.th.Pal.Muted
 					return l.Layout(gtx)
 				}),
@@ -207,34 +223,34 @@ func (ui *UI) sidebarNav(gtx layout.Context) layout.Dimensions {
 
 func (ui *UI) navRow(gtx layout.Context, item *navItem) layout.Dimensions {
 	selected := ui.current == item.page
-	bg := color.NRGBA{}
 	fg := ui.th.Pal.Muted
 	if selected {
-		bg = ui.th.Pal.Accent
 		fg = ui.th.Pal.TextOnAccent
 	}
-	btn := material.Button(ui.th, &item.click, "")
-	btn.Background = bg
-	btn.CornerRadius = unit.Dp(radiusControl)
-	btn.Inset = layout.Inset{Top: 10, Bottom: 10, Left: 12, Right: 12}
 	return layout.Inset{Top: 2, Bottom: 2}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return btn.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return item.icon.Layout(gtx, fg)
-				}),
-				layout.Rigid(layout.Spacer{Width: 12}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					l := material.Label(ui.th, unit.Sp(14), item.label)
-					l.Color = ui.th.Pal.Fg
-					if selected {
-						l.Color = ui.th.Pal.TextOnAccent
-						l.Font.Weight = 600
-					}
-					return l.Layout(gtx)
-				}),
-			)
-		})
+		return material.Clickable(ui.th.Theme, &item.click, func(gtx layout.Context) layout.Dimensions {
+			if selected {
+				rr := clip.UniformRRect(image.Rect(0, 0, gtx.Constraints.Max.X, gtx.Constraints.Max.Y), gtx.Dp(radiusControl))
+				paint.FillShape(gtx.Ops, ui.th.Pal.Accent, rr.Op(gtx.Ops))
+			}
+			return layout.Inset{Top: 10, Bottom: 10, Left: 12, Right: 12}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return item.icon.Layout(gtx, fg)
+					}),
+					layout.Rigid(layout.Spacer{Width: 12}.Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						l := material.Label(ui.th.Theme, unit.Sp(14), item.label)
+						l.Color = ui.th.Pal.Fg
+						if selected {
+							l.Color = ui.th.Pal.TextOnAccent
+							l.Font.Weight = 600
+						}
+						return l.Layout(gtx)
+					}),
+				)
+			})
+		}).Layout(gtx)
 	})
 }
 
@@ -245,21 +261,21 @@ func (ui *UI) sidebarFooter(gtx layout.Context) layout.Dimensions {
 			paint.FillShape(gtx.Ops, ui.th.Pal.Border, rr.Op(gtx.Ops))
 			return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, 1)}
 		}),
-		layout.Rigid(layout.Spacer{Height: 12}),
+		layout.Rigid(layout.Spacer{Height: 12}.Layout),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return ui.statusDot(gtx, ui.th.Pal.Success, 8)
 				}),
-				layout.Rigid(layout.Spacer{Width: 8}),
+				layout.Rigid(layout.Spacer{Width: 8}.Layout),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					l := material.Label(ui.th, unit.Sp(12), "Live")
+					l := material.Label(ui.th.Theme, unit.Sp(12), "Live")
 					l.Color = ui.th.Pal.Muted
 					return l.Layout(gtx)
 				}),
-				layout.Flexed(1, layout.Spacer{Width: 0}),
+				layout.Flexed(1, layout.Spacer{Width: 0}.Layout),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					l := material.Label(ui.th, unit.Sp(11), "v1.0.0")
+					l := material.Label(ui.th.Theme, unit.Sp(11), "v1.0.0")
 					l.Color = ui.th.Pal.Muted
 					return l.Layout(gtx)
 				}),
@@ -272,7 +288,7 @@ func (ui *UI) content(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(ui.topbar),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return material.List(ui.th, &ui.pageList).Layout(gtx, 1, func(gtx layout.Context, _ int) layout.Dimensions {
+			return material.List(ui.th.Theme, &ui.pageList).Layout(gtx, 1, func(gtx layout.Context, _ int) layout.Dimensions {
 				switch ui.current {
 				case PageNetwork:
 					return ui.networkPage(gtx)
@@ -318,21 +334,21 @@ func (ui *UI) topbar(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Top: 12, Bottom: 12, Left: 22, Right: 16}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						l := material.Label(ui.th, unit.Sp(19), title)
+						l := material.Label(ui.th.Theme, unit.Sp(19), title)
 						l.Font.Weight = 700
 						return l.Layout(gtx)
 					}),
-					layout.Flexed(1, layout.Spacer{Width: 0}),
+					layout.Flexed(1, layout.Spacer{Width: 0}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.statusDot(gtx, ui.liveColor(), 8)
 					}),
-					layout.Rigid(layout.Spacer{Width: 8}),
+					layout.Rigid(layout.Spacer{Width: 8}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						l := material.Label(ui.th, unit.Sp(12), ui.liveLabel())
+						l := material.Label(ui.th.Theme, unit.Sp(12), ui.liveLabel())
 						l.Color = ui.th.Pal.Muted
 						return l.Layout(gtx)
 					}),
-					layout.Rigid(layout.Spacer{Width: 16}),
+					layout.Rigid(layout.Spacer{Width: 16}.Layout),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						return ui.iconButton(gtx, &ui.opsToggle, icons.ActionList, "Operations")
 					}),
@@ -364,13 +380,13 @@ func (ui *UI) opsPanel(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{Top: 12, Left: 16, Right: 16, Bottom: 8}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							l := material.Label(ui.th, unit.Sp(14), "Operations")
+							l := material.Label(ui.th.Theme, unit.Sp(14), "Operations")
 							l.Font.Weight = 600
 							return l.Layout(gtx)
 						}),
-						layout.Flexed(1, layout.Spacer{Width: 0}),
+						layout.Flexed(1, layout.Spacer{Width: 0}.Layout),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							btn := material.IconButton(ui.th, &ui.opsToggle, icons.NavigationClose, "Close")
+							btn := material.IconButton(ui.th.Theme, &ui.opsToggle, icons.NavigationClose, "Close")
 							btn.Background = ui.th.Pal.CardAlt
 							btn.Color = ui.th.Pal.Muted
 							btn.Size = unit.Dp(16)
@@ -384,7 +400,7 @@ func (ui *UI) opsPanel(gtx layout.Context) layout.Dimensions {
 				items := len(ops)
 				if items > 0 {
 					// newest first
-					return material.List(ui.th, &ui.opsList).Layout(gtx, items, func(gtx layout.Context, i int) layout.Dimensions {
+					return material.List(ui.th.Theme, &ui.opsList).Layout(gtx, items, func(gtx layout.Context, i int) layout.Dimensions {
 						op := ops[items-1-i]
 						return ui.opRow(gtx, op)
 					})
@@ -434,15 +450,15 @@ func (ui *UI) opRow(gtx layout.Context, op *actions.Op) layout.Dimensions {
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 								return statusIcon.Layout(gtx, statusColor)
 							}),
-							layout.Rigid(layout.Spacer{Width: 10}),
+							layout.Rigid(layout.Spacer{Width: 10}.Layout),
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								l := material.Label(ui.th, unit.Sp(13), op.Label)
+								l := material.Label(ui.th.Theme, unit.Sp(13), op.Label)
 								l.Color = ui.th.Pal.Fg
 								return l.Layout(gtx)
 							}),
-							layout.Flexed(1, layout.Spacer{Width: 0}),
+							layout.Flexed(1, layout.Spacer{Width: 0}.Layout),
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								l := material.Label(ui.th, unit.Sp(11), statusText)
+								l := material.Label(ui.th.Theme, unit.Sp(11), statusText)
 								l.Color = ui.th.Pal.Muted
 								return l.Layout(gtx)
 							}),
@@ -454,7 +470,7 @@ func (ui *UI) opRow(gtx layout.Context, op *actions.Op) layout.Dimensions {
 						}
 						if op.Status == actions.StatusError && op.Err != nil {
 							return layout.Inset{Top: 4, Left: 30}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-								l := material.Label(ui.th, unit.Sp(12), op.Err.Error())
+								l := material.Label(ui.th.Theme, unit.Sp(12), op.Err.Error())
 								l.Color = ui.th.Pal.Danger
 								return l.Layout(gtx)
 							})
@@ -480,8 +496,8 @@ func (ui *UI) opLog(gtx layout.Context, op *actions.Op) layout.Dimensions {
 	}
 	return layout.Inset{Top: 6, Left: 30}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(110))
-		return material.List(ui.th, list).Layout(gtx, len(logs), func(gtx layout.Context, i int) layout.Dimensions {
-			l := material.Label(ui.th, unit.Sp(11), logs[i])
+		return material.List(ui.th.Theme, list).Layout(gtx, len(logs), func(gtx layout.Context, i int) layout.Dimensions {
+			l := material.Label(ui.th.Theme, unit.Sp(11), logs[i])
 			l.Color = ui.th.Pal.Muted
 			l.MaxLines = 0
 			return l.Layout(gtx)
@@ -533,24 +549,24 @@ func (ui *UI) renderDialog(gtx layout.Context) layout.Dimensions {
 				return ui.card(gtx, ui.th.Pal.Card, radiusCard, 22, func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							l := material.Label(ui.th, unit.Sp(17), ui.dialog.title)
+							l := material.Label(ui.th.Theme, unit.Sp(17), ui.dialog.title)
 							l.Font.Weight = 700
 							return l.Layout(gtx)
 						}),
-						layout.Rigid(layout.Spacer{Height: 10}),
+						layout.Rigid(layout.Spacer{Height: 10}.Layout),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							l := material.Label(ui.th, unit.Sp(13), ui.dialog.message)
+							l := material.Label(ui.th.Theme, unit.Sp(13), ui.dialog.message)
 							l.Color = ui.th.Pal.Muted
 							return l.Layout(gtx)
 						}),
-						layout.Rigid(layout.Spacer{Height: 22}),
+						layout.Rigid(layout.Spacer{Height: 22}.Layout),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-								layout.Flexed(1, layout.Spacer{Width: 0}),
+								layout.Flexed(1, layout.Spacer{Width: 0}.Layout),
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 									return ui.ghostButton(gtx, &ui.dialog.cancel, "Cancel")
 								}),
-								layout.Rigid(layout.Spacer{Width: 10}),
+								layout.Rigid(layout.Spacer{Width: 10}.Layout),
 								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 									if ui.dialog.danger {
 										return ui.dangerButton(gtx, &ui.dialog.confirm, ui.dialog.confirmLabel)

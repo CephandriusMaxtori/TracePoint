@@ -2,10 +2,10 @@ package network
 
 import (
 	"context"
-	"net"
+	"slices"
 	"time"
 
-	"github.com/shirou/gopsutil/v4/net"
+	gsnet "github.com/shirou/gopsutil/v4/net"
 
 	"tracepoint/internal/state"
 )
@@ -14,12 +14,12 @@ import (
 // the overview sparklines.
 type Collector struct {
 	st      *state.Store
-	prev    map[string]net.IOCountersStat
+	prev    map[string]gsnet.IOCountersStat
 	updated time.Time
 }
 
 func New(st *state.Store) *Collector {
-	return &Collector{st: st, prev: map[string]net.IOCountersStat{}}
+	return &Collector{st: st, prev: map[string]gsnet.IOCountersStat{}}
 }
 
 func (c *Collector) Run(ctx context.Context) {
@@ -37,9 +37,15 @@ func (c *Collector) Run(ctx context.Context) {
 }
 
 func (c *Collector) sample(ctx context.Context) {
-	counters, _ := net.IOCountersWithContext(ctx, true)
+	counters, _ := gsnet.IOCountersWithContext(ctx, true)
 	now := time.Now()
 	dt := now.Sub(c.updated).Seconds()
+
+	infs, _ := gsnet.Interfaces()
+	byName := map[string]gsnet.InterfaceStat{}
+	for _, inf := range infs {
+		byName[inf.Name] = inf
+	}
 
 	up := map[string]bool{}
 	var totalRx, totalTx float64
@@ -60,11 +66,11 @@ func (c *Collector) sample(ctx context.Context) {
 			RxTotal: ct.BytesRecv,
 			TxTotal: ct.BytesSent,
 		}
-		if inf, err := net.InterfaceByName(ct.Name); err == nil {
-			iface.Up = inf.Flags&net.FlagUp != 0
+		if inf, ok := byName[ct.Name]; ok {
+			iface.Up = ifaceUp(inf)
 			iface.MTU = inf.MTU
 			for _, a := range inf.Addrs {
-				iface.Addrs = append(iface.Addrs, a.String())
+				iface.Addrs = append(iface.Addrs, a.Addr)
 			}
 			up[ct.Name] = true
 		}
@@ -73,17 +79,15 @@ func (c *Collector) sample(ctx context.Context) {
 	c.updated = now
 
 	// Interfaces with no traffic yet.
-	if infs, err := net.Interfaces(); err == nil {
-		for _, inf := range infs {
-			if up[inf.Name] {
-				continue
-			}
-			iface := state.NetIface{Name: inf.Name, Up: inf.Flags&net.FlagUp != 0, MTU: inf.MTU}
-			for _, a := range inf.Addrs {
-				iface.Addrs = append(iface.Addrs, a.String())
-			}
-			ifaces = append(ifaces, iface)
+	for _, inf := range infs {
+		if up[inf.Name] {
+			continue
 		}
+		iface := state.NetIface{Name: inf.Name, Up: ifaceUp(inf), MTU: inf.MTU}
+		for _, a := range inf.Addrs {
+			iface.Addrs = append(iface.Addrs, a.Addr)
+		}
+		ifaces = append(ifaces, iface)
 	}
 
 	c.st.Update(func(s *state.Store) {
@@ -97,4 +101,8 @@ func (c *Collector) sample(ctx context.Context) {
 		memPct = s.System.MemPercent
 	})
 	c.st.PushHist(cpuPct, memPct, totalRx, totalTx)
+}
+
+func ifaceUp(inf gsnet.InterfaceStat) bool {
+	return slices.Contains(inf.Flags, "up")
 }

@@ -23,7 +23,9 @@ type Client struct {
 	base  string
 }
 
-func New() *Client {
+// NewClient creates a Docker Engine API client over the local unix socket
+// (Linux) or named pipe (Windows). No CGO required.
+func NewClient() *Client {
 	transport := &http.Transport{
 		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			if runtime.GOOS == "windows" {
