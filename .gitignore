@@ -21,6 +21,9 @@ go.work.sum
 .vscode/
 *.swp
 
+# opencode
+.opencode/
+
 # OS
 .DS_Store
 Thumbs.db
